@@ -631,9 +631,8 @@ class AITranslator:
         self.api_key = api_key
 
         self.url = (
-            "https://generativelanguage.googleapis.com/"
-            "v1beta/models/gemini-2.0-flash:generateContent"
-        )
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+)
     # --------------------------------------------------------
 
     def simplify_information(self, medication):
@@ -709,7 +708,8 @@ Rules:
             )
 
             if response.status_code != 200:
-                return f"Gemini Error:\n\n{response.text}"
+                st.error(response.text)
+                return "Unable to generate explanation."
 
             data = response.json()
 
@@ -717,7 +717,6 @@ Rules:
 
         except Exception as error:
             return f"Gemini Error: {error}"
-    
 # ============================================================
 # Create Objects
 # ============================================================
