@@ -631,8 +631,9 @@ class AITranslator:
         self.api_key = api_key
 
         self.url = (
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-)
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+        )
+
     # --------------------------------------------------------
 
     def simplify_information(self, medication):
@@ -641,13 +642,13 @@ class AITranslator:
         information in simple language.
         """
 
-        # Check if API key exists
         if not self.api_key:
             return (
                 "Gemini API Key was not found.\n\n"
-                "Please add your API key in "
-                ".streamlit/secrets.toml"
+                "Please add your API key in Streamlit Secrets."
             )
+
+        # ...the rest of your function...
 
         prompt = f"""
 You are a helpful medical assistant.
@@ -699,7 +700,6 @@ Rules:
         }
 
         try:
-
             response = requests.post(
                 f"{self.url}?key={self.api_key}",
                 headers=headers,
@@ -708,12 +708,30 @@ Rules:
             )
 
             if response.status_code != 200:
-                st.error(response.text)
-                return "Unable to generate explanation."
+                return f"Gemini API Error ({response.status_code})\n\n{response.text}"
 
             data = response.json()
 
-            return data["candidates"][0]["content"]["parts"][0]["text"]
+            if "candidates" not in data:
+                return "Gemini did not return any response."
+
+            candidates = data["candidates"]
+
+            if not candidates:
+                return "Gemini returned an empty response."
+
+            parts = candidates[0].get("content", {}).get("parts", [])
+
+            if not parts:
+                return "Gemini returned no text."
+
+            return parts[0].get("text", "No text generated.")
+
+        except requests.exceptions.Timeout:
+            return "Gemini request timed out."
+
+        except requests.exceptions.ConnectionError:
+            return "Unable to connect to Gemini."
 
         except Exception as error:
             return f"Gemini Error: {error}"

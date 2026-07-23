@@ -257,13 +257,13 @@ if search_button:
                 )
 
             else:
-
+    
                 st.success(
                     "✅ No FDA recall has been found for this medication."
                 )
 
             st.divider()
-                        # ============================================================
+
             # ============================================================
             # Gemini AI Translation
             # ============================================================
@@ -271,10 +271,10 @@ if search_button:
             st.header("🤖 AI Medication Translator")
 
             st.markdown("""
-Click the button below to let **Gemini AI**
-rewrite the medication information into
-simple everyday language.
-""")
+            Click the button below to let **Gemini AI**
+            rewrite the medication information into
+            simple everyday language.
+            """)
 
             if st.button(
                 "✨ Generate Simple Explanation",
@@ -305,9 +305,6 @@ simple everyday language.
                     mime="text/plain",
                     use_container_width=True
                 )
-
-        st.divider()
-
 # ============================================================
 # Search History
 # ============================================================
