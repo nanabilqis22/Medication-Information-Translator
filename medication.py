@@ -11,6 +11,7 @@
 # ✔ Gemini AI
 # ============================================================
 
+
 # ============================================================
 # Import Libraries
 # ============================================================
@@ -22,23 +23,22 @@ import os
 import re
 from datetime import datetime
 
+
 # ============================================================
 # API URLs
 # ============================================================
 
-OPENFDA_LABEL_URL = (
-    "https://api.fda.gov/drug/label.json"
-)
+OPENFDA_LABEL_URL = "https://api.fda.gov/drug/label.json"
 
-OPENFDA_RECALL_URL = (
-    "https://api.fda.gov/drug/enforcement.json"
-)
+OPENFDA_RECALL_URL = "https://api.fda.gov/drug/enforcement.json"
+
 
 # ============================================================
 # Search History File
 # ============================================================
 
 SEARCH_HISTORY_FILE = "search_history.json"
+
 
 # ============================================================
 # Gemini API Key
@@ -50,6 +50,7 @@ try:
 except Exception:
     GEMINI_API_KEY = ""
 
+
 # ============================================================
 # Create Search History File
 # ============================================================
@@ -60,22 +61,15 @@ def create_history_file():
     does not already exist.
     """
 
-    if not os.path.exists(
-        SEARCH_HISTORY_FILE
-    ):
+    if not os.path.exists(SEARCH_HISTORY_FILE):
 
-        with open(
-            SEARCH_HISTORY_FILE,
-            "w"
-        ) as file:
+        with open(SEARCH_HISTORY_FILE, "w") as file:
 
-            json.dump(
-                [],
-                file,
-                indent=4
-            )
+            json.dump([], file, indent=4)
+
 
 create_history_file()
+
 
 # ============================================================
 # Regular Expression Validation
@@ -101,8 +95,7 @@ def validate_medication_name(name):
             name.strip()
         )
     )
-
-# ============================================================
+    # ============================================================
 # Medication Class
 # ============================================================
 
@@ -115,75 +108,52 @@ class Medication:
 
         self.name = name
 
-        self.purpose = "Not Available"
-
-        self.usage = "Not Available"
-
-        self.warnings = "Not Available"
-
-        self.side_effects = "Not Available"
-
-        self.dosage = "Not Available"
-
-        self.active_ingredient = "Not Available"
+        self.purpose = "Information not provided by the FDA."
+        self.usage = "Information not provided by the FDA."
+        self.warnings = "Information not provided by the FDA."
+        self.side_effects = "Information not provided by the FDA."
+        self.dosage = "Information not provided by the FDA."
+        self.active_ingredient = "Information not provided by the FDA."
 
         self.recall = False
-
-        self.recall_reason = (
-            "No FDA Recall Found"
-        )
+        self.recall_reason = "No FDA Recall Found"
 
         self.date = datetime.now().strftime(
             "%d %B %Y %I:%M %p"
         )
 
+
     # --------------------------------------------------------
 
     def update_information(
-
         self,
-
         purpose,
-
         usage,
-
         warnings,
-
         side_effects,
-
         dosage,
-
         ingredient
-
     ):
 
         self.purpose = purpose
-
         self.usage = usage
-
         self.warnings = warnings
-
         self.side_effects = side_effects
-
         self.dosage = dosage
-
         self.active_ingredient = ingredient
+
 
     # --------------------------------------------------------
 
     def update_recall(
-
         self,
-
         recall,
-
         reason
-
     ):
 
         self.recall = recall
-
         self.recall_reason = reason
+
 
     # --------------------------------------------------------
 
@@ -210,17 +180,18 @@ class Medication:
             "Active Ingredient":
             self.active_ingredient,
 
-            "Recall":
-            self.recall,
+            "Recall": self.recall,
 
             "Recall Reason":
             self.recall_reason,
 
-            "Date":
-            self.date
+            "Date": self.date
 
         }
-        # ============================================================
+
+
+
+# ============================================================
 # Search History Class
 # ============================================================
 
@@ -233,6 +204,7 @@ class SearchHistory:
     def __init__(self, filename):
 
         self.filename = filename
+
 
     # --------------------------------------------------------
 
@@ -251,42 +223,46 @@ class SearchHistory:
 
                 return json.load(file)
 
+
         except FileNotFoundError:
 
             return []
+
 
         except json.JSONDecodeError:
 
             return []
 
+
         except Exception:
 
             return []
+
 
     # --------------------------------------------------------
 
     def save_search(self, medication):
         """
         Save a medication search
-        to the JSON history file.
+        to JSON history file.
         """
 
         history = self.load_history()
 
+
         history.append({
 
-            "medication":
-            medication.name,
+            "medication": medication.name,
 
             "searched_at":
             datetime.now().strftime(
                 "%d %B %Y %I:%M %p"
             ),
 
-            "recall":
-            medication.recall
+            "recall": medication.recall
 
         })
+
 
         try:
 
@@ -301,11 +277,13 @@ class SearchHistory:
                     indent=4
                 )
 
+
         except Exception as error:
 
             st.error(
                 f"Unable to save history: {error}"
             )
+
 
     # --------------------------------------------------------
 
@@ -326,6 +304,7 @@ class SearchHistory:
                     file,
                     indent=4
                 )
+
 
         except Exception as error:
 
@@ -348,6 +327,7 @@ class FDAClient:
         self.label_url = OPENFDA_LABEL_URL
         self.recall_url = OPENFDA_RECALL_URL
 
+
     # --------------------------------------------------------
 
     def search_medication(self, medication_name):
@@ -356,11 +336,15 @@ class FDAClient:
         from the openFDA Drug Label API.
         """
 
-        # Convert common medicine names
         search_name = medication_name.lower()
 
+
+        # Convert common medicine names
+
         if search_name == "paracetamol":
+
             search_name = "acetaminophen"
+
 
         parameters = {
 
@@ -374,53 +358,54 @@ class FDAClient:
 
         }
 
+
         try:
 
             response = requests.get(
-
                 self.label_url,
-
                 params=parameters,
-
                 timeout=20
-
             )
+
 
             response.raise_for_status()
 
+
             data = response.json()
+
 
             if "results" not in data:
 
                 return None
 
+
+
             result = data["results"][0]
+
 
             medication = Medication(
                 medication_name
             )
 
+
             # -------------------------
-            # Active Ingredient
+            # Get Active Ingredient
             # -------------------------
 
             ingredient = self.extract_openfda(
-
                 result,
-
                 "substance_name"
-
             )
 
-            if ingredient == "Not Available":
+
+            if ingredient == "Information not provided by the FDA.":
 
                 ingredient = self.extract_openfda(
-
                     result,
-
                     "generic_name"
-
                 )
+
+
 
             # -------------------------
             # Update Medication Object
@@ -433,29 +418,36 @@ class FDAClient:
                     "purpose"
                 ),
 
+
                 usage=self.extract_text(
                     result,
                     "indications_and_usage"
                 ),
+
 
                 warnings=self.extract_text(
                     result,
                     "warnings"
                 ),
 
+
                 side_effects=self.extract_text(
                     result,
                     "adverse_reactions"
                 ),
+
 
                 dosage=self.extract_text(
                     result,
                     "dosage_and_administration"
                 ),
 
+
                 ingredient=ingredient
 
             )
+
+
 
             # -------------------------
             # Check Recall Status
@@ -465,15 +457,16 @@ class FDAClient:
                 medication_name
             )
 
+
             medication.update_recall(
-
                 recall_status,
-
                 recall_reason
-
             )
 
+
             return medication
+
+
 
         except requests.exceptions.Timeout:
 
@@ -481,11 +474,13 @@ class FDAClient:
                 "Connection timed out."
             )
 
+
         except requests.exceptions.ConnectionError:
 
             st.error(
                 "Unable to connect to openFDA."
             )
+
 
         except requests.exceptions.HTTPError as error:
 
@@ -493,22 +488,28 @@ class FDAClient:
                 f"HTTP Error: {error}"
             )
 
+
         except Exception as error:
 
             st.error(
                 f"Unexpected Error: {error}"
             )
 
+
         return None
-        # --------------------------------------------------------
+
+
+
+    # --------------------------------------------------------
     # Check FDA Drug Recall
     # --------------------------------------------------------
 
     def check_recall(self, medication_name):
         """
-        Check whether the medication
-        appears in the FDA Recall API.
+        Check whether medication
+        appears in FDA Recall API.
         """
+
 
         parameters = {
 
@@ -518,6 +519,7 @@ class FDAClient:
             "limit": 1
 
         }
+
 
         try:
 
@@ -531,88 +533,90 @@ class FDAClient:
 
             )
 
+
             response.raise_for_status()
 
+
             data = response.json()
+
+
 
             if "results" in data:
 
                 recall = data["results"][0]
 
+
                 reason = recall.get(
-
                     "reason_for_recall",
-
                     "Reason not available."
-
                 )
+
 
                 return True, reason
 
-        except requests.exceptions.Timeout:
 
-            pass
-
-        except requests.exceptions.ConnectionError:
-
-            pass
-
-        except requests.exceptions.HTTPError:
-
-            pass
 
         except Exception:
 
             pass
 
+
+
         return False, "No FDA recall found."
 
+
+
     # --------------------------------------------------------
-    # Extract Text from API
+    # Extract Text From FDA Response
     # --------------------------------------------------------
 
     def extract_text(self, data, key):
-        """
-        Extract text values from
-        the openFDA response.
-        """
 
         value = data.get(key)
 
+
         if not value:
 
-            return "Not Available"
+            return "Information not provided by the FDA."
+
+
 
         if isinstance(value, list):
 
             return "\n".join(value)
 
+
+
         return str(value)
+
+
 
     # --------------------------------------------------------
     # Extract openFDA Information
     # --------------------------------------------------------
 
     def extract_openfda(self, data, key):
-        """
-        Extract values from the
-        openfda section.
-        """
 
         openfda = data.get(
             "openfda",
             {}
         )
 
+
         value = openfda.get(key)
+
 
         if not value:
 
-            return "Not Available"
+            return "Information not provided by the FDA."
+
+
 
         if isinstance(value, list):
 
             return ", ".join(value)
+
+
 
         return str(value)
     # ============================================================
@@ -621,39 +625,45 @@ class FDAClient:
 
 class AITranslator:
     """
-    Uses Gemini AI to translate
+    Uses Gemini AI to rewrite
     medical information into
     simple everyday language.
     """
+
 
     def __init__(self, api_key):
 
         self.api_key = api_key
 
         self.url = (
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+            "https://generativelanguage.googleapis.com/"
+            "v1beta/models/gemini-2.5-flash:generateContent"
         )
+
 
     # --------------------------------------------------------
 
     def simplify_information(self, medication):
         """
-        Use Gemini AI to rewrite medication
-        information in simple language.
+        Use Gemini AI to simplify
+        medication information.
         """
 
+
         if not self.api_key:
+
             return (
                 "Gemini API Key was not found.\n\n"
                 "Please add your API key in Streamlit Secrets."
             )
 
-        # ...the rest of your function...
+
 
         prompt = f"""
 You are a helpful medical assistant.
 
-Rewrite the following medication information into simple everyday English.
+Rewrite the following medication information
+into simple everyday English.
 
 Medication:
 {medication.name}
@@ -676,74 +686,147 @@ Dosage:
 Active Ingredient:
 {medication.active_ingredient}
 
+
 Rules:
 - Use simple English.
 - Use bullet points.
 - Keep the explanation short.
-- Do not use difficult medical words.
+- Avoid difficult medical words.
 """
 
+
+
         payload = {
+
             "contents": [
+
                 {
+
                     "parts": [
+
                         {
+
                             "text": prompt
+
                         }
+
                     ]
+
                 }
+
             ]
+
         }
+
+
 
         headers = {
-            "Content-Type": "application/json"
+
+            "Content-Type":
+            "application/json"
+
         }
 
+
+
         try:
+
             response = requests.post(
+
                 f"{self.url}?key={self.api_key}",
+
                 headers=headers,
+
                 json=payload,
+
                 timeout=60
+
             )
 
+
+
             if response.status_code != 200:
-                return f"Gemini API Error ({response.status_code})\n\n{response.text}"
+
+                return (
+                    f"Gemini API Error "
+                    f"({response.status_code})\n\n"
+                    f"{response.text}"
+                )
+
+
 
             data = response.json()
 
+
+
             if "candidates" not in data:
+
                 return "Gemini did not return any response."
+
+
 
             candidates = data["candidates"]
 
+
+
             if not candidates:
+
                 return "Gemini returned an empty response."
 
-            parts = candidates[0].get("content", {}).get("parts", [])
+
+
+            parts = (
+                candidates[0]
+                .get("content", {})
+                .get("parts", [])
+            )
+
+
 
             if not parts:
+
                 return "Gemini returned no text."
 
-            return parts[0].get("text", "No text generated.")
+
+
+            return parts[0].get(
+                "text",
+                "No text generated."
+            )
+
+
 
         except requests.exceptions.Timeout:
+
             return "Gemini request timed out."
 
+
+
         except requests.exceptions.ConnectionError:
+
             return "Unable to connect to Gemini."
 
+
+
         except Exception as error:
+
             return f"Gemini Error: {error}"
+
+
+
 # ============================================================
 # Create Objects
 # ============================================================
+
 
 history_manager = SearchHistory(
     SEARCH_HISTORY_FILE
 )
 
+
 fda_client = FDAClient()
+
+
 
 translator = AITranslator(
     GEMINI_API_KEY
